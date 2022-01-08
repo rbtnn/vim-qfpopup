@@ -85,7 +85,6 @@ function! s:open(lines, line, col) abort
 		endif
 		if -1 == s:winid
 			let s:winid = nvim_open_win(s:bnr, 0, opts)
-			call s:win_execute()
 		endif
 		call nvim_buf_set_lines(s:bnr, 0, -1, v:true, a:lines)
 		call nvim_win_set_config(s:winid, opts)
@@ -96,7 +95,6 @@ function! s:open(lines, line, col) abort
 				\ 'minwidth': s:width,
 				\ 'maxwidth': s:width,
 				\ })
-			call s:win_execute()
 		endif
 
 		call popup_settext(s:winid, a:lines)
@@ -104,6 +102,11 @@ function! s:open(lines, line, col) abort
 			\ 'line': a:line,
 			\ 'col': a:col,
 			\ })
+	endif
+	if -1 != s:winid
+		call win_execute(s:winid, 'setlocal nowrap')
+		call win_execute(s:winid, 'setlocal buftype=nofile')
+		call win_execute(s:winid, 'setfiletype qf')
 	endif
 endfunction
 
@@ -116,12 +119,6 @@ function! s:close() abort
 		endif
 	endif
 	let s:winid = -1
-endfunction
-
-function! s:win_execute() abort
-	call win_execute(s:winid, 'setfiletype qf')
-	call win_execute(s:winid, 'setlocal nowrap')
-	call win_execute(s:winid, 'setlocal buftype=nofile')
 endfunction
 
 augroup qfpopup
