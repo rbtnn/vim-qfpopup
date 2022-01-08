@@ -110,11 +110,12 @@ endfunction
 
 augroup qfpopup
 	autocmd!
-	autocmd BufEnter,CursorMoved,CursorMovedI     * :call <SID>qfpopup()
+	autocmd VimResized,BufEnter          * :call <SID>qfpopup()
+	autocmd CursorMoved,CursorMovedI     * :call <SID>qfpopup()
 	if has('nvim')
-		autocmd TermEnter                         * :call <SID>qfpopup()
+		autocmd TermEnter                * :call <SID>qfpopup()
 	else
-		autocmd TerminalOpen                      * :call <SID>qfpopup()
+		autocmd TerminalOpen             * :call <SID>qfpopup()
 	endif
 augroup END
 
