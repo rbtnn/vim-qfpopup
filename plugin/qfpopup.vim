@@ -1,13 +1,22 @@
 
 let g:loaded_qfpopup = 1
 
-let s:width = 50
-let s:height = 3
-let s:screenrow = get(s:, 'screenrow', -1)
-let s:winid = get(s:, 'winid', -1)
-let s:bnr = get(s:, 'bnr', -1)
+function! s:init() abort
+	let s:width = get(g:, 'qfpopup_width', 50)
+	if s:width < 1
+		let s:width = 50
+	endif
+	let s:height = get(g:, 'qfpopup_height', 4)
+	if s:height < 2
+		let s:height = 4
+	endif
+	let s:screenrow = get(s:, 'screenrow', -1)
+	let s:winid = get(s:, 'winid', -1)
+	let s:bnr = get(s:, 'bnr', -1)
+endfunction
 
 function! s:qfpopup() abort
+	call s:init()
 	let xs = getqflist()
 	if empty(xs) || (&buftype == 'terminal') || get(g:, 'qfpopup_disabled', v:false)
 		call s:close()
@@ -15,13 +24,13 @@ function! s:qfpopup() abort
 		let curr_idx = get(getqflist({ 'idx': 0 }), 'idx', 0)
 		let st = (-1 == curr_idx)
 			\ ? -1
-			\ : ((curr_idx < 2)
+			\ : ((curr_idx <= s:height / 2)
 			\   ? 0
-			\   : (len(xs) == curr_idx)
-			\     ? len(xs) - s:height
-			\     : curr_idx - 1 - 1
+			\   : (len(xs) - s:height / 2 < curr_idx)
+			\     ? len(xs) - s:height + 1
+			\     : curr_idx - s:height / 2
 			\   )
-		let ed = (-1 == curr_idx) ? -1 : (st + s:height - 1)
+		let ed = (-1 == curr_idx) ? -1 : (st + s:height - 2)
 		let lines = [printf('Quickfix %d/%d', curr_idx, len(xs))]
 		for i in range(st, ed)
 			if 0 <= i && i < len(xs)
@@ -37,8 +46,15 @@ function! s:qfpopup() abort
 		if screenrow() <= &lines - &cmdheight
 			let s:screenrow = screenrow()
 		endif
-		let line = &lines / 3 < s:screenrow ? 2 : &lines - &cmdheight - s:height
-		let col = &columns - 1
+		if &lines / 3 < s:screenrow
+			let line = 2
+			if (2 == &showtabline) || ((1 == &showtabline) && (1 < tabpagenr('$')))
+				let line += 1
+			endif
+		else
+			let line = &lines - &cmdheight - s:height
+		endif
+		let col = &columns - s:width - 1
 		if has('tabsidebar')
 			if (2 == &showtabsidebar) || ((1 == &showtabsidebar) && (1 < tabpagenr('$')))
 				let col -= &tabsidebarcolumns
@@ -58,7 +74,7 @@ function! s:open(lines, line, col) abort
 		let opts = {
 			\ 'relative': 'editor',
 			\ 'width': s:width,
-			\ 'height': s:height + 1,
+			\ 'height': s:height,
 			\ 'row': a:line - 1,
 			\ 'col': a:col,
 			\ 'focusable': 0,
@@ -76,7 +92,7 @@ function! s:open(lines, line, col) abort
 	else
 		if -1 == index(popup_list(), s:winid)
 			let s:winid = popup_create([], {
-				\ 'pos': 'topright',
+				\ 'pos': 'topleft',
 				\ 'minwidth': s:width,
 				\ 'maxwidth': s:width,
 				\ })
