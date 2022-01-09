@@ -64,7 +64,7 @@ function! s:make_lines() abort
 				\   printf('%s %s|%s| %s ',
 				\     i + 1 == curr_idx ? '>' : ' ',
 				\     fnamemodify(bufname(x['bufnr']), ':t'),
-				\     lnum_and_col, x['text'])
+				\     lnum_and_col, trim(x['text']))
 				\ ]
 		endif
 	endfor
