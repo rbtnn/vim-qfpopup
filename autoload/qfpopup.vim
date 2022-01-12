@@ -1,16 +1,20 @@
 
 function! qfpopup#exec() abort
 	call s:init()
-	if empty(getqflist()) || (&buftype == 'terminal') || get(g:, 'qfpopup_disabled', v:false)
+	if get(g:, 'qfpopup_disabled', v:false)
+		call s:close()
+	elseif &buftype == 'terminal'
+		call s:close()
+	elseif empty(getqflist())
+		call s:close()
+	elseif s:displayed_qf()
 		call s:close()
 	else
-		let lines = s:make_lines()
-		let [line, col] = s:calc_line_and_col()
-
-		if tabpagenr() != get(get(getwininfo(s:winid), 0, {}), 'tabnr', -1)
+		if !s:is_current_qfpopup()
 			call s:close()
 		endif
-
+		let lines = s:make_lines()
+		let [line, col] = s:calc_line_and_col()
 		call s:open(lines, line, col)
 	endif
 endfunction
@@ -155,3 +159,17 @@ function! s:close() abort
 	endif
 	let s:winid = -1
 endfunction
+
+function! s:is_current_qfpopup() abort
+	return tabpagenr() == get(get(getwininfo(s:winid), 0, {}), 'tabnr', -1)
+endfunction
+
+function! s:displayed_qf() abort
+	for x in getwininfo()
+		if (x['tabnr'] == tabpagenr()) && (getbufvar(x['bufnr'], '&buftype', '') == 'quickfix')
+			return v:true
+		endif
+	endfor
+	return v:false
+endfunction
+
