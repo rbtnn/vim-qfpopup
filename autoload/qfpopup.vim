@@ -76,7 +76,11 @@ function! s:make_lines() abort
 endfunction
 
 function! s:calc_line_and_col() abort
-	let row = screenrow()
+	let row = get(screenpos(win_getid(), line('.'), col('.')), 'row', 1)
+	if 0 == row
+		redraw
+		let row = get(screenpos(win_getid(), line('.'), col('.')), 'row', 1)
+	endif
 	if &lines - &cmdheight < row
 		let row = &lines - &cmdheight
 	endif
@@ -96,6 +100,9 @@ function! s:calc_line_and_col() abort
 		endif
 	else
 		let line = &lines - &cmdheight - s:height
+		if 0 != &laststatus
+			let line -= 1
+		endif
 	endif
 
 	let col = &columns - s:width - 1
